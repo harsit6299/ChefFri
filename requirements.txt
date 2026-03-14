@@ -1,0 +1,12 @@
+fastapi==0.115.8
+uvicorn==0.34.0
+pandas==2.2.3
+numpy==2.2.3
+sentence-transformers==3.4.1
+faiss-cpu==1.10.0
+rank-bm25==0.2.2
+python-dotenv==1.0.1
+groq==0.18.0
+httpx==0.28.1
+pydantic==2.10.6
+gradio==5.22.0
