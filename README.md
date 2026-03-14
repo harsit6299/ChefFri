@@ -1,11 +1,11 @@
-# Recipe Agentic RAG (Groq)
+# ChefFri - An Agentic RAG based Agent
 
 This project builds an agentic RAG system on top of `food_recipes.csv` to:
 - predict the best matching recipe for a user query,
 - summarize the recipe into 5-10 actionable steps,
 - fetch recipes from an external source when local confidence is low.
 
-![image](https://github.com/harsit6299/CAMPUS-PLACEMENT-PORTAL/blob/d2329ec7a2cbd0f3e70132d423e34f6c99c76a2e/Light%20Mode.png)
+![image](https://github.com/harsit6299/ChefFri/blob/422a7055fafdf5c9dbb11cf47ba9cba5b3a62889/Image.png)
 
 ## Agent Design (5 agents/components)
 
