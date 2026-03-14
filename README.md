@@ -5,6 +5,8 @@ This project builds an agentic RAG system on top of `food_recipes.csv` to:
 - summarize the recipe into 5-10 actionable steps,
 - fetch recipes from an external source when local confidence is low.
 
+![image](https://github.com/harsit6299/CAMPUS-PLACEMENT-PORTAL/blob/d2329ec7a2cbd0f3e70132d423e34f6c99c76a2e/Light%20Mode.png)
+
 ## Agent Design (5 agents/components)
 
 1. Router Agent: parses intent/constraints from user text.
