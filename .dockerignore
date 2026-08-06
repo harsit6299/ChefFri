@@ -1,0 +1,25 @@
+# Never bake the API key into an image layer - it is passed at runtime via
+# compose `env_file` instead.
+.env
+.env.*
+!.env.example
+
+# Host virtualenv is Windows-built and useless (actively harmful) in a Linux image.
+.venv/
+venv/
+
+__pycache__/
+**/__pycache__/
+*.py[cod]
+
+.git/
+.gitignore
+
+# ~39MB of generated index, bind-mounted from the host at runtime rather than
+# copied in, so the container reuses the index you already built.
+index_store/
+
+*.md
+Dockerfile
+.dockerignore
+docker-compose.yml

@@ -1,0 +1,29 @@
+# Both services run the same image; naming it explicitly means compose builds
+# it once rather than twice.
+
+services:
+  ui:
+    build: .
+    image: cheffri:latest
+    ports:
+      - "7860:7860"
+    env_file:
+      - .env
+    environment:
+      GRADIO_SERVER_NAME: "0.0.0.0"
+      GRADIO_SHARE: "false"
+    volumes:
+      # Reuse the index already built on the host instead of regenerating it
+      # inside the container on every start.
+      - ./index_store:/app/index_store
+
+  api:
+    build: .
+    image: cheffri:latest
+    command: uvicorn src.api:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./index_store:/app/index_store
