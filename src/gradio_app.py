@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import os
 from html import escape
 
 import gradio as gr
 
-from src.pipeline import RecipeRAGPipeline
+from src.graph_pipeline import RecipeAgenticPipeline
 
 
-pipeline = RecipeRAGPipeline()
+pipeline = RecipeAgenticPipeline()
 
 
 def _build_list_html(items: list[str], empty_message: str) -> str:
@@ -33,9 +34,17 @@ def run_recipe(query: str) -> tuple[str, str, str, str]:
 
     result = pipeline.run(text)
 
+    # Make the graph's routing decision visible: if either conditional edge
+    # sent this query through the TheMealDB fallback, say so in the UI.
+    fallback_badge = (
+        "<span class=\"fallback-badge\">Fetched via TheMealDB fallback</span>"
+        if result.used_fallback
+        else ""
+    )
+
     title = f"""
     <div class=\"result-title\">
-      <h2>{escape(result.predicted_recipe)}</h2>
+      <h2>{escape(result.predicted_recipe)}{fallback_badge}</h2>
       <p><strong>Rating:</strong> {escape(_format_rating(result.rating, result.vote_count))}</p>
     </div>
     """
@@ -155,6 +164,20 @@ with gr.Blocks(theme=gr.themes.Soft(), title="ChefFri") as demo:
             color: var(--chef-text);
             box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
           }
+          .fallback-badge {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+            padding: 3px 10px;
+            border: 1px solid var(--chef-border);
+            border-radius: 999px;
+            background: rgba(200, 120, 40, 0.16);
+            color: var(--chef-muted) !important;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+          }
           .card h3 {
             margin-top: 0;
           }
@@ -236,4 +259,12 @@ with gr.Blocks(theme=gr.themes.Soft(), title="ChefFri") as demo:
 
 
 if __name__ == "__main__":
-  demo.launch(share=True)
+    # Defaults preserve the original local behaviour (127.0.0.1 + public share
+    # link). In Docker both need overriding: the server must bind 0.0.0.0 or the
+    # port publish is unreachable from the host, and the share tunnel is usually
+    # unwanted for a container you are running locally.
+    demo.launch(
+        server_name=os.getenv("GRADIO_SERVER_NAME", "127.0.0.1"),
+        server_port=int(os.getenv("GRADIO_SERVER_PORT", "7860")),
+        share=os.getenv("GRADIO_SHARE", "true").lower() == "true",
+    )

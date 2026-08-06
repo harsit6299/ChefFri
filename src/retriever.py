@@ -48,6 +48,42 @@ class HybridRetriever:
         tokenized_docs = [doc.lower().split() for doc in self.documents]
         self.bm25 = BM25Okapi(tokenized_docs)
 
+    def add_records(self, new_records: list[RecipeRecord]) -> None:
+        """Append records to the in-memory index without rebuilding it wholesale.
+
+        `build()` re-encodes every document, which over the full ~8k-recipe
+        corpus means re-running Sentence Transformers across all of it. That is
+        far too expensive to do inside a live request just to merge in the
+        handful of recipes a fallback fetched. FAISS supports incremental
+        `add()`, so only the genuinely new documents get embedded here. BM25Okapi
+        has no incremental API and must be reconstructed, but that is
+        tokenization only - no model inference.
+
+        Records already present (matched on title + source) are skipped, so
+        repeated fallbacks in a long-lived server process cannot pile up
+        duplicates of the same external recipe.
+        """
+        if self.bm25 is None:
+            raise ValueError("Retriever index is not loaded or built")
+
+        existing = {(r.recipe_title, r.source) for r in self.records}
+        fresh = [r for r in new_records if (r.recipe_title, r.source) not in existing]
+        if not fresh:
+            return
+
+        fresh_documents = [recipe_to_document(r) for r in fresh]
+
+        if self.retrieval_mode == "hybrid":
+            if self.embedding_model is None or self.faiss_index is None:
+                raise ValueError("Hybrid retriever requires FAISS index and embedding model")
+            embeddings = self.embedding_model.encode(fresh_documents, normalize_embeddings=True)
+            # Appending keeps FAISS row order aligned with self.records below.
+            self.faiss_index.add(np.array(embeddings, dtype=np.float32))
+
+        self.records = self.records + fresh
+        self.documents = self.documents + fresh_documents
+        self.bm25 = BM25Okapi([doc.lower().split() for doc in self.documents])
+
     def save(self) -> None:
         if self.bm25 is None:
             raise ValueError("Index not built")

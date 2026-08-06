@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 
-from src.pipeline import RecipeRAGPipeline
+from src.graph_pipeline import RecipeAgenticPipeline
 
 
 def main() -> None:
@@ -11,7 +11,7 @@ def main() -> None:
     parser.add_argument("query", type=str, help="Recipe request, e.g. 'high protein vegetarian dinner'")
     args = parser.parse_args()
 
-    pipeline = RecipeRAGPipeline()
+    pipeline = RecipeAgenticPipeline()
     result = pipeline.run(args.query)
     print(json.dumps(result.model_dump(), indent=2, ensure_ascii=False))
 

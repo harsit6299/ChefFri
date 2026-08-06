@@ -3,11 +3,11 @@ from __future__ import annotations
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from src.pipeline import RecipeRAGPipeline
+from src.graph_pipeline import RecipeAgenticPipeline
 
 
 app = FastAPI(title="Recipe Agentic RAG API", version="1.0.0")
-pipeline = RecipeRAGPipeline()
+pipeline = RecipeAgenticPipeline()
 
 
 class PredictRequest(BaseModel):

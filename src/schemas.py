@@ -37,3 +37,6 @@ class RecipeAnswer(BaseModel):
     source: str
     source_url: str | None = None
     rationale: str
+    # True when the graph routed through the TheMealDB fallback node for this
+    # query, on either the weak-retrieval or the weak-ranking-confidence edge.
+    used_fallback: bool = False

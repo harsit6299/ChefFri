@@ -61,10 +61,33 @@ class RankerAgent:
         user_prompt = f"Intent: {intent}\n\nCandidates:\n{candidate_text}"
         decision = self.llm.complete_json(system_prompt, user_prompt)
 
-        best_id = int(decision.get("best_id", 0))
+        # The model can legitimately answer `null` for any of these keys when
+        # nothing in the candidate set matches - which is exactly the case the
+        # TheMealDB fallback exists to rescue. `dict.get(key, default)` does not
+        # help there: the key IS present, its value is just None, so the default
+        # never applies and int(None) / float(None) raise. Coalesce explicitly.
+        raw_best_id = decision.get("best_id")
+        raw_confidence = decision.get("confidence")
+        raw_rationale = decision.get("rationale")
+
+        try:
+            best_id = int(raw_best_id) if raw_best_id is not None else 0
+        except (TypeError, ValueError):
+            best_id = 0
         best_id = min(max(best_id, 0), len(top) - 1)
-        confidence = float(decision.get("confidence", top[best_id].score))
-        rationale = str(decision.get("rationale", "Selected highest semantic and metadata match."))
+
+        # A missing confidence means the model declined to judge, so claim none.
+        # Deliberately NOT defaulting to the retrieval score: that is only a 0-1
+        # quantity in hybrid mode, and in bm25 mode it is a raw unbounded BM25
+        # sum that would read as wildly over-confident. Reporting 0.0 instead
+        # lets the post-rank edge route to fallback and re-rank, which is the
+        # recovery this graph was built to do.
+        try:
+            confidence = float(raw_confidence) if raw_confidence is not None else 0.0
+        except (TypeError, ValueError):
+            confidence = 0.0
+
+        rationale = str(raw_rationale) if raw_rationale else "Selected highest semantic and metadata match."
         return top[best_id].recipe, confidence, rationale
 
 
